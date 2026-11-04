@@ -19,10 +19,10 @@ Antes de ver los dos métodos externos, aquí está la operación que ambos reut
 
 ```python
 def mezclar(a, b):
-    i = j = 0
+    i = j = 0  # i recorre a, j recorre b — cada una solo avanza hacia adelante
     salida = []
     while i < len(a) and j < len(b):
-        if a[i] <= b[j]:
+        if a[i] <= b[j]:  # el menor de los dos "frentes" siempre va primero en la salida
             salida.append(a[i]); i += 1
         else:
             salida.append(b[j]); j += 1
@@ -49,11 +49,13 @@ Esta mezcla cuesta O(n+m) — un solo recorrido de ambas listas — porque **ya 
 
 ```python
 def escribir_archivo(nombre, datos):
+    # simula "volcar a disco" porque en ordenamiento externo real nunca cabe todo en RAM
     with open(nombre, 'w') as f:
         for d in datos:
             f.write(str(d) + '\n')
 
 def leer_archivo(nombre):
+    # simula "traer de disco a RAM" solo lo que se necesita en ese momento
     with open(nombre) as f:
         return [int(l) for l in f if l.strip()]
 
@@ -61,9 +63,10 @@ datos = [57, 12, 90, 3, 45, 88, 21, 67, 5, 99, 34, 72, 8, 61]
 TAM_BLOQUE = 4  # tamaño máximo que "cabe en memoria" a la vez
 
 def crear_runs(datos, tam_bloque, prefijo):
+    # fase 1: partir el archivo completo en bloques de tamaño fijo, ordenar cada uno aparte y guardarlo
     runs = []
     for i in range(0, len(datos), tam_bloque):
-        bloque = sorted(datos[i:i+tam_bloque])  # ordenamiento interno de un bloque chico
+        bloque = sorted(datos[i:i+tam_bloque])  # ordenamiento interno de un bloque chico (sí cabe en RAM)
         nombre = f"{prefijo}_{len(runs)}.txt"
         escribir_archivo(nombre, bloque)
         runs.append(nombre)
@@ -71,6 +74,7 @@ def crear_runs(datos, tam_bloque, prefijo):
     return runs
 
 def mezclar_dos_archivos(nombre_a, nombre_b, nombre_salida):
+    # lee dos runs ya ordenadas, las mezcla (como mezclar() de la sección 5.2.1) y guarda el resultado
     a = leer_archivo(nombre_a)
     b = leer_archivo(nombre_b)
     i = j = 0
@@ -86,7 +90,7 @@ def mezclar_dos_archivos(nombre_a, nombre_b, nombre_salida):
 
 runs = crear_runs(datos, TAM_BLOQUE, "run")
 paso = 0
-while len(runs) > 1:
+while len(runs) > 1:  # fase 2: mezclar runs de dos en dos, en pasadas, hasta que quede solo una
     paso += 1
     nuevas = []
     print(f"pasada {paso}:")
@@ -98,7 +102,7 @@ while len(runs) > 1:
             nuevas.append(salida)
         else:
             nuevas.append(runs[i])  # run impar sin pareja, pasa directo a la siguiente ronda
-    runs = nuevas
+    runs = nuevas  # las runs mezcladas de esta pasada son la entrada de la siguiente
 print("resultado final:", leer_archivo(runs[0]))
 ```
 
@@ -129,6 +133,7 @@ Con 14 elementos y bloques de 4, se crearon 4 runs iniciales. Se necesitaron **2
 
 ```python
 def detectar_runs_naturales(datos):
+    # un solo recorrido del archivo: agrupa en el mismo run mientras los valores sigan subiendo
     runs = []
     actual = [datos[0]]
     for i in range(1, len(datos)):
@@ -137,10 +142,11 @@ def detectar_runs_naturales(datos):
         else:
             runs.append(actual)
             actual = [datos[i]]  # se rompió el orden -> empieza un run nuevo
-    runs.append(actual)
+    runs.append(actual)  # no olvidar el último run en construcción
     return runs
 
 def mezclar(a, b):
+    # misma operación de intercalación de la sección 5.2.1, reutilizada aquí también
     i = j = 0
     salida = []
     while i < len(a) and j < len(b):
@@ -153,13 +159,13 @@ def mezclar(a, b):
 
 datos = [3, 12, 57, 90, 2, 45, 88, 1, 67, 99]
 print("datos:", datos)
-runs = detectar_runs_naturales(datos)
+runs = detectar_runs_naturales(datos)  # fase 1: detectar tramos ya ordenados, sin tamaño fijo
 print("runs naturales detectadas (sin tamaño fijo, aprovechando el orden ya existente):")
 for r in runs:
     print(" ", r)
 
 paso = 0
-while len(runs) > 1:
+while len(runs) > 1:  # fase 2: mezclar runs de dos en dos hasta que quede solo una (igual que en 5.2.2)
     paso += 1
     nuevas = []
     print(f"pasada {paso}:")
@@ -169,7 +175,7 @@ while len(runs) > 1:
             print(f"  {runs[i]} + {runs[i+1]} -> {m}")
             nuevas.append(m)
         else:
-            nuevas.append(runs[i])
+            nuevas.append(runs[i])  # run impar sin pareja, pasa directo a la siguiente ronda
     runs = nuevas
 print("resultado final:", runs[0])
 ```

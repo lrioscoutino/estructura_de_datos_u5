@@ -19,15 +19,16 @@ Más adelante, en `02_ordenamiento_externos.md`, vas a ver qué cambia cuando lo
 
 ```python
 def burbuja(lista):
-    lista = lista.copy()
+    lista = lista.copy()  # no mutar la lista original del llamador
     n = len(lista)
     comparaciones = 0
     intercambios = 0
-    for i in range(n - 1):
+    for i in range(n - 1):  # una pasada completa por cada elemento que falta "asentar"
         huboIntercambio = False
+        # tras cada pasada, el último "n-1-i" ya quedó en su posición final -> no hace falta revisarlo de nuevo
         for j in range(n - 1 - i):
             comparaciones += 1
-            if lista[j] > lista[j + 1]:
+            if lista[j] > lista[j + 1]:  # están en el orden incorrecto -> intercambiar
                 lista[j], lista[j + 1] = lista[j + 1], lista[j]
                 intercambios += 1
                 huboIntercambio = True
@@ -77,23 +78,23 @@ ya ordenado -> comparaciones: 6 intercambios: 0
 ```python
 def quicksort(lista, inicio=0, fin=None, profundidad=0):
     if fin is None:
-        fin = len(lista) - 1
-    if inicio < fin:
-        p = particionar(lista, inicio, fin)
+        fin = len(lista) - 1  # primera llamada: cubrir toda la lista
+    if inicio < fin:  # segmento de 0 o 1 elementos -> ya está ordenado, caso base
+        p = particionar(lista, inicio, fin)  # p = posición final del pivote
         print("  " * profundidad + f"pivote={lista[p]} -> izq={lista[inicio:p]} der={lista[p+1:fin+1]}")
-        quicksort(lista, inicio, p - 1, profundidad + 1)
-        quicksort(lista, p + 1, fin, profundidad + 1)
+        quicksort(lista, inicio, p - 1, profundidad + 1)  # ordenar la mitad izquierda (menores)
+        quicksort(lista, p + 1, fin, profundidad + 1)     # ordenar la mitad derecha (mayores)
     return lista
 
 def particionar(lista, inicio, fin):
     pivote = lista[fin]  # esquema de Lomuto: el pivote es siempre el último elemento
-    i = inicio - 1
+    i = inicio - 1  # i marca el final de la zona "ya confirmada <= pivote"
     for j in range(inicio, fin):
         if lista[j] <= pivote:
             i += 1
-            lista[i], lista[j] = lista[j], lista[i]
-    lista[i + 1], lista[fin] = lista[fin], lista[i + 1]
-    return i + 1
+            lista[i], lista[j] = lista[j], lista[i]  # mete lista[j] dentro de la zona de menores
+    lista[i + 1], lista[fin] = lista[fin], lista[i + 1]  # coloca el pivote justo después de los menores
+    return i + 1  # posición final del pivote: a su izquierda todo <= él, a su derecha todo >= él
 
 datos = [64, 25, 12, 22, 11, 90, 5]
 print("original:", datos)
@@ -129,18 +130,19 @@ Nota algo importante en esta corrida real: el primer pivote elegido (5, el últi
 def shellsort(lista):
     lista = lista.copy()
     n = len(lista)
-    gap = n // 2
+    gap = n // 2  # salto inicial: la mitad del tamaño de la lista
     while gap > 0:
         print(f"gap={gap}")
+        # inserción directa, pero comparando elementos separados "gap" posiciones en vez de 1
         for i in range(gap, n):
-            temp = lista[i]
+            temp = lista[i]  # elemento que se va a insertar en su sub-lista (la de su mismo "carril" de gap)
             j = i
             while j >= gap and lista[j - gap] > temp:
-                lista[j] = lista[j - gap]
+                lista[j] = lista[j - gap]  # recorre hacia atrás, "gap" en "gap", para abrir el hueco
                 j -= gap
-            lista[j] = temp
+            lista[j] = temp  # inserta temp en el hueco que quedó libre
         print("  estado:", lista)
-        gap //= 2
+        gap //= 2  # reduce el salto para la siguiente pasada, hasta llegar a gap=1
     return lista
 
 datos = [64, 25, 12, 22, 11, 90, 5, 33]
@@ -189,14 +191,14 @@ def counting_sort_por_digito(lista, exp):
     salida = [0] * n
     conteo = [0] * 10  # un contador por cada dígito posible (0-9)
     for num in lista:
-        digito = (num // exp) % 10
+        digito = (num // exp) % 10  # extrae el dígito que toca en esta pasada
         conteo[digito] += 1
     for i in range(1, 10):
-        conteo[i] += conteo[i - 1]  # conteo acumulado -> posiciones finales
+        conteo[i] += conteo[i - 1]  # conteo acumulado -> cuántos elementos van antes o igual a cada dígito
     for i in range(n - 1, -1, -1):  # recorrido de atrás hacia adelante: así se mantiene estable
         digito = (lista[i] // exp) % 10
-        salida[conteo[digito] - 1] = lista[i]
-        conteo[digito] -= 1
+        salida[conteo[digito] - 1] = lista[i]  # coloca el elemento en su posición final para este dígito
+        conteo[digito] -= 1  # libera esa posición para el siguiente elemento con el mismo dígito
     return salida
 
 datos = [170, 45, 75, 90, 802, 24, 2, 66]
