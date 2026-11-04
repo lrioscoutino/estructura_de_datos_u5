@@ -8,7 +8,7 @@ Continuación directa de la [Unidad 4](../estructura_de_datos_u4/README.md): ah�
 
 ## Contenido
 
-- [01_ordenamiento_internos.md](01_ordenamiento_internos.md) — 5.1 Algoritmos de ordenamiento internos: Burbuja, Quicksort, ShellSort y Radix Sort — implementación paso a paso, salidas reales, análisis de complejidad, tabla comparativa e implementaciones reales (Timsort, Introsort, `qsort`, GPU radix sort, índices de bases de datos)
+- [01_ordenamiento_internos.md](01_ordenamiento_internos.md) — 5.1 Algoritmos de ordenamiento internos: Burbuja, Quicksort (con sus tres formas de particionar: listas auxiliares, Hoare y Lomuto), ShellSort y Radix Sort — implementación paso a paso, salidas reales, análisis de complejidad, tabla comparativa e implementaciones reales (Timsort, Introsort, `qsort`, GPU radix sort, índices de bases de datos)
 - [02_ordenamiento_externos.md](02_ordenamiento_externos.md) — 5.2 Algoritmos de ordenamiento externos: Intercalación (la operación de mezcla base), Mezcla Directa y Mezcla Natural — con archivos reales en disco simulando datos que no caben en memoria, e implementaciones reales (`sort` de Unix, `ORDER BY` externo en bases de datos, shuffle de Hadoop/Spark, procesamiento de logs)
 
 ## Nota sobre el código
