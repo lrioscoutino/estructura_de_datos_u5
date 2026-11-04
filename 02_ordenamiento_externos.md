@@ -211,6 +211,18 @@ Con estos mismos 10 datos, la mezcla natural encontró **3 runs** en lugar de la
 | Peor caso | O(n log(n/B)) | Igual que la mezcla directa con bloques de tamaño 1 |
 | Cuándo conviene | Datos sin ningún orden previo conocido | Datos con tramos ya ordenados (registros casi cronológicos, logs, etc.) |
 
+---
+
+## Implementaciones reales en tecnología actual
+
+El ordenamiento externo no es un tema de museo — es exactamente lo que hacen estos sistemas cuando el volumen de datos supera la memoria disponible:
+
+- **El comando `sort` de Unix/Linux** — cuando el archivo a ordenar es más grande que la memoria disponible, `sort` cambia automáticamente a un algoritmo de **mezcla externa**: parte el archivo en bloques que sí caben en RAM, los ordena y los guarda como runs temporales en disco, y luego los va mezclando — el mismo patrón de `crear_runs` + `mezclar_dos_archivos` de la sección 5.2.2, solo que a escala de gigabytes.
+- **`ORDER BY` en bases de datos (PostgreSQL, MySQL)** — cuando un `ORDER BY` o un `GROUP BY` necesita ordenar más filas de las que caben en la memoria asignada a la consulta (`work_mem` en PostgreSQL), el motor recurre a un **external merge sort**: genera runs ordenadas en disco temporal y las mezcla, igual que en esta práctica. Puedes verlo tú mismo con `EXPLAIN ANALYZE` sobre una consulta grande: el plan muestra literalmente un paso llamado "External Merge".
+- **La fase *shuffle* de Hadoop MapReduce y Apache Spark** — al procesar datasets de terabytes repartidos en cientos de máquinas, cada nodo ordena sus propios datos localmente (fase *map*) y los escribe a disco; después, la fase *reduce* **mezcla** los fragmentos ya ordenados de todos los nodos — una mezcla directa distribuida, donde cada "run" vive en una máquina distinta.
+- **Edición de video y procesamiento de logs a gran escala** — herramientas que procesan archivos de registro (logs) de varios gigabytes, demasiado grandes para cargar completos en memoria, usan el mismo patrón: ordenar fragmentos pequeños por separado (por ejemplo, por marca de tiempo) y mezclarlos — frecuentemente aprovechando que los logs **ya vienen casi ordenados cronológicamente**, el caso ideal para **mezcla natural**.
+- **Motores de bases de datos columnares para analítica (ej. construcción de índices en ClickHouse, BigQuery)** — al construir un índice ordenado sobre una tabla de miles de millones de filas, el ordenamiento se hace por partes en disco/almacenamiento distribuido y se mezcla, nunca cargando la tabla completa en memoria de una sola vez.
+
 ## Fuentes
 
 - Programa sinóptico oficial AED-1026 — TecNM (5.2 Algoritmos de ordenamiento externos)

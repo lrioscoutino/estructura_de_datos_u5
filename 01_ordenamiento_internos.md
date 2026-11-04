@@ -240,6 +240,19 @@ Observa la primera pasada (`exp=1`, el dígito de las unidades): `170` y `90` te
 
 La elección correcta no es "¿cuál es el mejor algoritmo?" sino "¿qué forma tienen mis datos?": Quicksort gana cuando hay suficiente memoria para la recursión y el pivote se puede elegir bien; Radix gana cuando se ordenan enteros con pocos dígitos; ShellSort es una alternativa simple cuando no quieres implementar recursión; Burbuja casi nunca gana, pero demuestra la idea base de la que parten los demás.
 
+---
+
+## Implementaciones reales en tecnología actual
+
+Estos mismos algoritmos (o variantes directas de ellos) están corriendo hoy dentro de herramientas que usas todos los días:
+
+- **Timsort (Python `sorted()`/`list.sort()`, Java `Arrays.sort()` para objetos)** — un híbrido entre Mezcla (la que viste en `02_ordenamiento_externos.md`) e Inserción directa: detecta tramos ya ordenados en los datos de entrada (igual que la **mezcla natural**) y los mezcla, pero usa inserción directa para ordenar tramos cortos antes de mezclarlos. Fue diseñado específicamente para datos reales, que casi nunca están en orden totalmente aleatorio.
+- **Introsort (C++ `std::sort`, .NET `Array.Sort`)** — empieza como **Quicksort**, pero si detecta que la recursión se está desbalanceando demasiado (el caso O(n²) que viste en la sección 5.1.2), cambia a Heapsort para garantizar que nunca se dispare el tiempo de ejecución. Combina la velocidad típica de Quicksort con una cota de seguridad que Quicksort puro no tiene.
+- **`qsort` de la librería estándar de C** — es, literalmente, una implementación de **Quicksort** (con variantes de partición según la implementación de cada sistema) expuesta como función de propósito general desde los años 70.
+- **GPU radix sort (motores gráficos, CUDA, renderizado de partículas)** — las tarjetas gráficas ordenan millones de elementos (partículas, triángulos por profundidad) usando **Radix Sort** en paralelo: cada núcleo de la GPU procesa un dígito/bit a la vez sobre miles de elementos simultáneamente, aprovechando que Radix no necesita comparar elementos entre sí.
+- **ShellSort en sistemas embebidos** — algunas implementaciones ligeras de la librería estándar de C para sistemas con muy poca memoria (como uClibc, usada en routers y dispositivos IoT) usan ShellSort para `qsort()` en vez de Quicksort, porque no necesita memoria extra para recursión.
+- **Índices de bases de datos (PostgreSQL, MySQL)** — al construir un índice `B-Tree` desde cero sobre una tabla existente, el motor ordena todas las filas por la columna indexada antes de construir el árbol; para tablas que caben en memoria usa variantes internas (tipo Quicksort/Timsort), y para tablas grandes recurre a ordenamiento externo (ver `02_ordenamiento_externos.md`).
+
 ## Fuentes
 
 - Programa sinóptico oficial AED-1026 — TecNM (5.1 Algoritmos de ordenamiento internos)
