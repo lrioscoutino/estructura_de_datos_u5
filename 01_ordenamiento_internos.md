@@ -120,6 +120,95 @@ Nota algo importante en esta corrida real: el primer pivote elegido (5, el últi
 
 **Cuándo se usa en la práctica:** es el que usan por default muchos lenguajes para ordenar arreglos genéricos (con variantes como *introsort*, que cambia a heapsort si detecta que la recursión se está desbalanceando demasiado) — rápido en el caso típico, y el riesgo de peor caso se mitiga eligiendo el pivote de forma aleatoria o como la mediana de tres valores.
 
+### Tres formas de implementar la partición
+
+El código de arriba usa el esquema de **Lomuto**, pero no es la única forma de partir la lista. Existen (al menos) tres enfoques distintos y vale la pena verlos juntos porque cada uno expone una idea diferente de cómo funciona la partición.
+
+**1. Con listas auxiliares** — la forma más fácil de leer, pero la que normalmente no se usa en código de producción:
+
+```python
+def quicksort_auxiliar(lista):
+    # Caso base: 0 o 1 elementos ya está ordenado
+    if len(lista) <= 1:
+        return lista
+
+    pivote = lista[-1]  # mismo criterio que Lomuto: el último elemento
+    resto = lista[:-1]
+
+    # Dos listas NUEVAS en vez de reordenar el mismo arreglo
+    menores = [x for x in resto if x <= pivote]
+    mayores = [x for x in resto if x > pivote]
+
+    # Se ordena cada lista por separado (recursión) y se unen con el pivote en medio
+    return quicksort_auxiliar(menores) + [pivote] + quicksort_auxiliar(mayores)
+
+datos = [64, 25, 12, 22, 11, 90, 5]
+print("auxiliar:", quicksort_auxiliar(datos.copy()))
+```
+
+**Salida real:**
+
+```
+auxiliar: [5, 11, 12, 22, 25, 64, 90]
+```
+
+No hay índices que cuidar ni intercambios que razonar: se lee casi como la definición matemática de Quicksort ("menores, pivote, mayores"). El costo es la memoria: cada llamada crea listas nuevas, O(n) de memoria extra por nivel de recursión, en vez de O(log n) que logran Lomuto y Hoare trabajando directamente sobre el mismo arreglo ("in place").
+
+**2. Partición de Hoare** — la original, propuesta por Tony Hoare en 1960. Dos índices arrancan en los extremos del segmento y se acercan uno al otro: `izq` avanza mientras encuentra valores menores que el pivote, `der` retrocede mientras encuentra valores mayores. Cuando ambos se detienen sin haberse cruzado, se intercambian esos dos valores y se repite; cuando se cruzan, la partición terminó:
+
+```python
+def particion_hoare(lista, lo, hi):
+    pivote = lista[lo]  # aquí el pivote se toma del extremo IZQUIERDO
+    izq = lo - 1
+    der = hi + 1
+
+    while True:
+        izq += 1
+        while lista[izq] < pivote:  # avanza mientras encuentre menores
+            izq += 1
+
+        der -= 1
+        while lista[der] > pivote:  # retrocede mientras encuentre mayores
+            der -= 1
+
+        if izq >= der:  # los índices se cruzaron: la partición terminó
+            return der  # der es el punto de corte, no necesariamente la posición final del pivote
+
+        lista[izq], lista[der] = lista[der], lista[izq]
+
+def quicksort_hoare(lista, lo=0, hi=None):
+    if hi is None:
+        hi = len(lista) - 1
+    if lo < hi:
+        p = particion_hoare(lista, lo, hi)
+        quicksort_hoare(lista, lo, p)
+        quicksort_hoare(lista, p + 1, hi)
+    return lista
+
+d = datos.copy()
+quicksort_hoare(d)
+print("hoare:", d)
+```
+
+**Salida real:**
+
+```
+hoare: [5, 11, 12, 22, 25, 64, 90]
+```
+
+Diferencia clave frente a Lomuto: en Hoare, al terminar una partición el pivote **no** queda garantizado en su posición final — el valor que devuelve la función (`der`) es solo el punto donde se corta la lista en dos sublistas a seguir ordenando. A cambio, Hoare hace en promedio **menos intercambios** que Lomuto y se comporta mejor cuando hay muchos valores repetidos (Lomuto puede degradar a O(n²) con más facilidad en esos casos).
+
+**3. Partición de Lomuto** — la que ya se mostró arriba: un solo índice `i` (la "frontera de menores") recorre el segmento una sola vez de izquierda a derecha. Es la más fácil de implementar sin errores y la más común en libros de texto, aunque hace más intercambios en promedio que Hoare.
+
+| | Listas auxiliares | Hoare | Lomuto |
+|---|---|---|---|
+| Facilidad de lectura | Muy alta | Media-baja | Alta |
+| Memoria extra | O(n) por nivel | O(1) (in place) | O(1) (in place) |
+| Intercambios promedio | — (no aplica, no muta) | Menos | Más |
+| Pivote en posición final al terminar la partición | No aplica | No | Sí |
+| Con muchos valores repetidos | Normal | Buen comportamiento | Puede degradar a O(n²) |
+| Uso típico | Enseñanza / prototipos | Implementaciones de alto rendimiento | Libros de texto, la más enseñada |
+
 ---
 
 ## 5.1.3 ShellSort
