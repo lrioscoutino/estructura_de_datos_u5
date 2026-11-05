@@ -69,6 +69,95 @@ ya ordenado -> comparaciones: 6 intercambios: 0
 
 **Cuándo se usa en la práctica:** casi nunca en producción (es de los más lentos), pero es el punto de partida obvio para enseñar la idea de "comparar e intercambiar", y es útil cuando la lista es muy pequeña o ya está casi ordenada.
 
+### Visualización paso a paso en texto
+
+El código anterior solo imprime el resultado final. Para explicar cada comparación en clase ayuda ver el arreglo completo en cada paso, con marcas (`^^`) debajo de los dos elementos que se están comparando:
+
+```python
+def mostrar(lista, marcar=None, etiqueta=""):
+    fila = " ".join(f"{v:>3}" for v in lista)
+    print(f"[{fila}]  {etiqueta}")
+    if marcar:  # imprime una segunda línea con ^^ debajo de las posiciones marcadas
+        marcas = "".join(" ^^ " if i in marcar else "    " for i in range(len(lista)))
+        print(f" {marcas}")
+
+def burbuja_visual(lista):
+    lista = lista.copy()
+    n = len(lista)
+    mostrar(lista, etiqueta="(inicio)")
+    for i in range(n - 1):
+        huboIntercambio = False
+        for j in range(n - 1 - i):
+            if lista[j] > lista[j + 1]:
+                mostrar(lista, marcar={j, j+1}, etiqueta=f"{lista[j]} > {lista[j+1]} -> se intercambian")
+                lista[j], lista[j + 1] = lista[j + 1], lista[j]
+                huboIntercambio = True
+            else:
+                mostrar(lista, marcar={j, j+1}, etiqueta=f"{lista[j]} <= {lista[j+1]} -> ya están en orden, no se mueven")
+        mostrar(lista, etiqueta=f"fin de la pasada {i+1}: lista[{n-1-i}] ya quedó en su lugar final")
+        if not huboIntercambio:
+            break
+    return lista
+
+burbuja_visual([64, 25, 12, 22, 11, 90, 5])
+```
+
+**Salida real:**
+
+```
+[ 64  25  12  22  11  90   5]  (inicio)
+[ 64  25  12  22  11  90   5]  64 > 25 -> se intercambian
+  ^^  ^^
+[ 25  64  12  22  11  90   5]  64 > 12 -> se intercambian
+      ^^  ^^
+[ 25  12  64  22  11  90   5]  64 > 22 -> se intercambian
+          ^^  ^^
+[ 25  12  22  64  11  90   5]  64 > 11 -> se intercambian
+              ^^  ^^
+[ 25  12  22  11  64  90   5]  64 <= 90 -> ya están en orden, no se mueven
+                  ^^  ^^
+[ 25  12  22  11  64  90   5]  90 > 5 -> se intercambian
+                      ^^  ^^
+[ 25  12  22  11  64   5  90]  fin de la pasada 1: lista[6] ya quedó en su lugar final
+[ 25  12  22  11  64   5  90]  25 > 12 -> se intercambian
+  ^^  ^^
+[ 12  25  22  11  64   5  90]  25 > 22 -> se intercambian
+      ^^  ^^
+[ 12  22  25  11  64   5  90]  25 > 11 -> se intercambian
+          ^^  ^^
+[ 12  22  11  25  64   5  90]  25 <= 64 -> ya están en orden, no se mueven
+              ^^  ^^
+[ 12  22  11  25  64   5  90]  64 > 5 -> se intercambian
+                  ^^  ^^
+[ 12  22  11  25   5  64  90]  fin de la pasada 2: lista[5] ya quedó en su lugar final
+[ 12  22  11  25   5  64  90]  12 <= 22 -> ya están en orden, no se mueven
+  ^^  ^^
+[ 12  22  11  25   5  64  90]  22 > 11 -> se intercambian
+      ^^  ^^
+[ 12  11  22  25   5  64  90]  22 <= 25 -> ya están en orden, no se mueven
+          ^^  ^^
+[ 12  11  22  25   5  64  90]  25 > 5 -> se intercambian
+              ^^  ^^
+[ 12  11  22   5  25  64  90]  fin de la pasada 3: lista[4] ya quedó en su lugar final
+[ 12  11  22   5  25  64  90]  12 > 11 -> se intercambian
+  ^^  ^^
+[ 11  12  22   5  25  64  90]  12 <= 22 -> ya están en orden, no se mueven
+      ^^  ^^
+[ 11  12  22   5  25  64  90]  22 > 5 -> se intercambian
+          ^^  ^^
+[ 11  12   5  22  25  64  90]  fin de la pasada 4: lista[3] ya quedó en su lugar final
+[ 11  12   5  22  25  64  90]  11 <= 12 -> ya están en orden, no se mueven
+  ^^  ^^
+[ 11  12   5  22  25  64  90]  12 > 5 -> se intercambian
+      ^^  ^^
+[ 11   5  12  22  25  64  90]  fin de la pasada 5: lista[2] ya quedó en su lugar final
+[ 11   5  12  22  25  64  90]  11 > 5 -> se intercambian
+  ^^  ^^
+[  5  11  12  22  25  64  90]  fin de la pasada 6: lista[1] ya quedó en su lugar final
+```
+
+Esta misma idea — imprimir el arreglo y marcar con `^^` las posiciones activas — es la que reutilizan las versiones visuales de Quicksort, ShellSort y Radix más abajo.
+
 ---
 
 ## 5.1.2 Quicksort
@@ -119,6 +208,121 @@ Nota algo importante en esta corrida real: el primer pivote elegido (5, el últi
 **Complejidad:** O(n log n) en el promedio y el mejor caso (particiones balanceadas). **O(n²) en el peor caso** — ocurre precisamente cuando el pivote elegido siempre es el menor o el mayor del segmento, como estuvo a punto de pasar aquí (en listas ya ordenadas, elegir siempre el último elemento como pivote produce exactamente este peor caso). **Espacio:** O(log n) por la pila de llamadas recursivas (en el caso balanceado).
 
 **Cuándo se usa en la práctica:** es el que usan por default muchos lenguajes para ordenar arreglos genéricos (con variantes como *introsort*, que cambia a heapsort si detecta que la recursión se está desbalanceando demasiado) — rápido en el caso típico, y el riesgo de peor caso se mitiga eligiendo el pivote de forma aleatoria o como la mediana de tres valores.
+
+### Visualización paso a paso en texto
+
+Mismo truco que en Burbuja: imprimir el segmento activo completo, marcando el pivote (`PIV`) y la posición que se está comparando (`^^`) en cada paso de la partición:
+
+```python
+def mostrar(lista, marcar=None, pivote=None, etiqueta=""):
+    fila = " ".join(f"{v:>3}" for v in lista)
+    print(f"[{fila}]  {etiqueta}")
+    if marcar or pivote is not None:
+        marcas = []
+        for i in range(len(lista)):
+            if i == pivote:
+                marcas.append(" PIV")
+            elif marcar and i in marcar:
+                marcas.append(" ^^ ")
+            else:
+                marcas.append("    ")
+        print(" " + "".join(marcas))
+
+def particionar_visual(lista, inicio, fin):
+    pivote = lista[fin]
+    print(f"\n-- partición de [{inicio}..{fin}] = {lista[inicio:fin+1]}, pivote = {pivote} --")
+    i = inicio - 1
+    for j in range(inicio, fin):
+        cumple = lista[j] <= pivote
+        mostrar(lista, marcar={j}, pivote=fin,
+                etiqueta=f"j={j}: {lista[j]} <= {pivote}? {'Sí' if cumple else 'No'}")
+        if cumple:
+            i += 1
+            lista[i], lista[j] = lista[j], lista[i]
+            if i != j:
+                mostrar(lista, marcar={i, j}, pivote=fin, etiqueta=f"  entra a la zona de menores: intercambia i={i} con j={j}")
+    lista[i + 1], lista[fin] = lista[fin], lista[i + 1]
+    mostrar(lista, marcar={i+1}, etiqueta=f"pivote {pivote} va a su posición final: {i+1}")
+    return i + 1
+
+def quicksort_visual(lista, inicio=0, fin=None):
+    if fin is None:
+        fin = len(lista) - 1
+    if inicio < fin:
+        p = particionar_visual(lista, inicio, fin)
+        quicksort_visual(lista, inicio, p - 1)
+        quicksort_visual(lista, p + 1, fin)
+    return lista
+
+datos = [64, 25, 12, 22, 11, 90, 5]
+mostrar(datos, etiqueta="(inicio)")
+quicksort_visual(datos)
+print("\nordenado:", datos)
+```
+
+**Salida real:**
+
+```
+[ 64  25  12  22  11  90   5]  (inicio)
+
+-- partición de [0..6] = [64, 25, 12, 22, 11, 90, 5], pivote = 5 --
+[ 64  25  12  22  11  90   5]  j=0: 64 <= 5? No
+  ^^                      PIV
+[ 64  25  12  22  11  90   5]  j=1: 25 <= 5? No
+      ^^                  PIV
+[ 64  25  12  22  11  90   5]  j=2: 12 <= 5? No
+          ^^              PIV
+[ 64  25  12  22  11  90   5]  j=3: 22 <= 5? No
+              ^^          PIV
+[ 64  25  12  22  11  90   5]  j=4: 11 <= 5? No
+                  ^^      PIV
+[ 64  25  12  22  11  90   5]  j=5: 90 <= 5? No
+                      ^^  PIV
+[  5  25  12  22  11  90  64]  pivote 5 va a su posición final: 0
+  ^^
+
+-- partición de [1..6] = [25, 12, 22, 11, 90, 64], pivote = 64 --
+[  5  25  12  22  11  90  64]  j=1: 25 <= 64? Sí
+      ^^                  PIV
+[  5  25  12  22  11  90  64]  j=2: 12 <= 64? Sí
+          ^^              PIV
+[  5  25  12  22  11  90  64]  j=3: 22 <= 64? Sí
+              ^^          PIV
+[  5  25  12  22  11  90  64]  j=4: 11 <= 64? Sí
+                  ^^      PIV
+[  5  25  12  22  11  90  64]  j=5: 90 <= 64? No
+                      ^^  PIV
+[  5  25  12  22  11  64  90]  pivote 64 va a su posición final: 5
+                      ^^
+
+-- partición de [1..4] = [25, 12, 22, 11], pivote = 11 --
+[  5  25  12  22  11  64  90]  j=1: 25 <= 11? No
+      ^^          PIV
+[  5  25  12  22  11  64  90]  j=2: 12 <= 11? No
+          ^^      PIV
+[  5  25  12  22  11  64  90]  j=3: 22 <= 11? No
+              ^^  PIV
+[  5  11  12  22  25  64  90]  pivote 11 va a su posición final: 1
+      ^^
+
+-- partición de [2..4] = [12, 22, 25], pivote = 25 --
+[  5  11  12  22  25  64  90]  j=2: 12 <= 25? Sí
+          ^^      PIV
+[  5  11  12  22  25  64  90]  j=3: 22 <= 25? Sí
+              ^^  PIV
+[  5  11  12  22  25  64  90]  pivote 25 va a su posición final: 4
+                  ^^
+
+-- partición de [2..3] = [12, 22], pivote = 22 --
+[  5  11  12  22  25  64  90]  j=2: 12 <= 22? Sí
+          ^^  PIV
+[  5  11  12  22  25  64  90]  pivote 22 va a su posición final: 3
+              ^^
+
+ordenado: [5, 11, 12, 22, 25, 64, 90]
+```
+
+Esta trazabilidad es útil en clase para mostrar por qué el primer pivote (5, el valor más pequeño de la lista) produce una partición muy desbalanceada (0 elementos a la izquierda, 6 a la derecha) — es la misma observación de la sección anterior, pero ahora se ve "elemento por elemento" en vez de solo en el resumen final.
 
 ### Tres formas de implementar la partición
 
@@ -258,6 +462,152 @@ Con `gap=4`, solo se comparan pares separados por 4 posiciones (posición 0 con 
 
 **Cuándo se usa en la práctica:** para listas medianas donde Quicksort sería excesivo de implementar (no necesita recursión ni memoria extra) y Burbuja/Inserción directa serían demasiado lentos — es una opción intermedia simple de programar.
 
+### Visualización paso a paso en texto
+
+Aquí lo importante de marcar no es solo "quién se compara", sino el **gap**: qué tan separados están los dos elementos que se comparan en cada pasada.
+
+```python
+def mostrar(lista, marcar=None, etiqueta=""):
+    fila = " ".join(f"{v:>3}" for v in lista)
+    print(f"[{fila}]  {etiqueta}")
+    if marcar:
+        marcas = "".join(" ^^ " if i in marcar else "    " for i in range(len(lista)))
+        print(" " + marcas)
+
+def shellsort_visual(lista):
+    lista = lista.copy()
+    n = len(lista)
+    gap = n // 2
+    while gap > 0:
+        print(f"\n-- gap = {gap} --")
+        for i in range(gap, n):
+            temp = lista[i]
+            j = i
+            mostrar(lista, marcar={i}, etiqueta=f"elemento a insertar: lista[{i}]={temp}")
+            while j >= gap and lista[j - gap] > temp:
+                mostrar(lista, marcar={j-gap, j}, etiqueta=f"{lista[j-gap]} (pos {j-gap}) > {temp}? Sí -> recorre y abre hueco")
+                lista[j] = lista[j - gap]
+                j -= gap
+            if j != i:
+                lista[j] = temp
+                mostrar(lista, marcar={j}, etiqueta=f"{temp} se inserta en la posición {j}")
+            else:
+                mostrar(lista, marcar={j}, etiqueta="ya estaba en su lugar dentro de este gap, no se mueve")
+        mostrar(lista, etiqueta=f"fin de la pasada con gap={gap}")
+        gap //= 2
+    return lista
+
+datos = [64, 25, 12, 22, 11, 90, 5, 33]
+mostrar(datos, etiqueta="(inicio)")
+resultado = shellsort_visual(datos)
+print("\nordenado:", resultado)
+```
+
+**Salida real:**
+
+```
+[ 64  25  12  22  11  90   5  33]  (inicio)
+
+-- gap = 4 --
+[ 64  25  12  22  11  90   5  33]  elemento a insertar: lista[4]=11
+                  ^^
+[ 64  25  12  22  11  90   5  33]  64 (pos 0) > 11? Sí -> recorre y abre hueco
+  ^^              ^^
+[ 11  25  12  22  64  90   5  33]  11 se inserta en la posición 0
+  ^^
+[ 11  25  12  22  64  90   5  33]  elemento a insertar: lista[5]=90
+                      ^^
+[ 11  25  12  22  64  90   5  33]  ya estaba en su lugar dentro de este gap, no se mueve
+                      ^^
+[ 11  25  12  22  64  90   5  33]  elemento a insertar: lista[6]=5
+                          ^^
+[ 11  25  12  22  64  90   5  33]  12 (pos 2) > 5? Sí -> recorre y abre hueco
+          ^^              ^^
+[ 11  25   5  22  64  90  12  33]  5 se inserta en la posición 2
+          ^^
+[ 11  25   5  22  64  90  12  33]  elemento a insertar: lista[7]=33
+                              ^^
+[ 11  25   5  22  64  90  12  33]  ya estaba en su lugar dentro de este gap, no se mueve
+                              ^^
+[ 11  25   5  22  64  90  12  33]  fin de la pasada con gap=4
+
+-- gap = 2 --
+[ 11  25   5  22  64  90  12  33]  elemento a insertar: lista[2]=5
+          ^^
+[ 11  25   5  22  64  90  12  33]  11 (pos 0) > 5? Sí -> recorre y abre hueco
+  ^^      ^^
+[  5  25  11  22  64  90  12  33]  5 se inserta en la posición 0
+  ^^
+[  5  25  11  22  64  90  12  33]  elemento a insertar: lista[3]=22
+              ^^
+[  5  25  11  22  64  90  12  33]  25 (pos 1) > 22? Sí -> recorre y abre hueco
+      ^^      ^^
+[  5  22  11  25  64  90  12  33]  22 se inserta en la posición 1
+      ^^
+[  5  22  11  25  64  90  12  33]  elemento a insertar: lista[4]=64
+                  ^^
+[  5  22  11  25  64  90  12  33]  ya estaba en su lugar dentro de este gap, no se mueve
+                  ^^
+[  5  22  11  25  64  90  12  33]  elemento a insertar: lista[5]=90
+                      ^^
+[  5  22  11  25  64  90  12  33]  ya estaba en su lugar dentro de este gap, no se mueve
+                      ^^
+[  5  22  11  25  64  90  12  33]  elemento a insertar: lista[6]=12
+                          ^^
+[  5  22  11  25  64  90  12  33]  64 (pos 4) > 12? Sí -> recorre y abre hueco
+                  ^^      ^^
+[  5  22  11  25  12  90  64  33]  12 se inserta en la posición 4
+                  ^^
+[  5  22  11  25  12  90  64  33]  elemento a insertar: lista[7]=33
+                              ^^
+[  5  22  11  25  12  90  64  33]  90 (pos 5) > 33? Sí -> recorre y abre hueco
+                      ^^      ^^
+[  5  22  11  25  12  33  64  90]  33 se inserta en la posición 5
+                      ^^
+[  5  22  11  25  12  33  64  90]  fin de la pasada con gap=2
+
+-- gap = 1 --
+[  5  22  11  25  12  33  64  90]  elemento a insertar: lista[1]=22
+      ^^
+[  5  22  11  25  12  33  64  90]  ya estaba en su lugar dentro de este gap, no se mueve
+      ^^
+[  5  22  11  25  12  33  64  90]  elemento a insertar: lista[2]=11
+          ^^
+[  5  22  11  25  12  33  64  90]  22 (pos 1) > 11? Sí -> recorre y abre hueco
+      ^^  ^^
+[  5  11  22  25  12  33  64  90]  11 se inserta en la posición 1
+      ^^
+[  5  11  22  25  12  33  64  90]  elemento a insertar: lista[3]=25
+              ^^
+[  5  11  22  25  12  33  64  90]  ya estaba en su lugar dentro de este gap, no se mueve
+              ^^
+[  5  11  22  25  12  33  64  90]  elemento a insertar: lista[4]=12
+                  ^^
+[  5  11  22  25  12  33  64  90]  25 (pos 3) > 12? Sí -> recorre y abre hueco
+              ^^  ^^
+[  5  11  22  25  25  33  64  90]  22 (pos 2) > 12? Sí -> recorre y abre hueco
+          ^^  ^^
+[  5  11  12  22  25  33  64  90]  12 se inserta en la posición 2
+          ^^
+[  5  11  12  22  25  33  64  90]  elemento a insertar: lista[5]=33
+                      ^^
+[  5  11  12  22  25  33  64  90]  ya estaba en su lugar dentro de este gap, no se mueve
+                      ^^
+[  5  11  12  22  25  33  64  90]  elemento a insertar: lista[6]=64
+                          ^^
+[  5  11  12  22  25  33  64  90]  ya estaba en su lugar dentro de este gap, no se mueve
+                          ^^
+[  5  11  12  22  25  33  64  90]  elemento a insertar: lista[7]=90
+                              ^^
+[  5  11  12  22  25  33  64  90]  ya estaba en su lugar dentro de este gap, no se mueve
+                              ^^
+[  5  11  12  22  25  33  64  90]  fin de la pasada con gap=1
+
+ordenado: [5, 11, 12, 22, 25, 33, 64, 90]
+```
+
+Con `gap=4` las marcas `^^` quedan muy separadas: eso es justo lo que distingue a ShellSort de la inserción directa (gap=1 sería comparar solo adyacentes desde el principio). Nota el paso intermedio raro `[5 11 22 25 25 33 64 90]` en `gap=1`: es el "hueco" que deja temporalmente el elemento que se está recorriendo hacia atrás, antes de insertarse en su posición final — por eso aparece un 25 duplicado por un instante.
+
 ---
 
 ## 5.1.4 Radix Sort
@@ -313,6 +663,79 @@ Observa la primera pasada (`exp=1`, el dígito de las unidades): `170` y `90` te
 **Complejidad:** O(d·(n+k)), donde `d` es el número de dígitos del valor más grande y `k` el rango de cada dígito (10, en base decimal). Si `d` es constante (como con enteros de tamaño fijo), esto es efectivamente **O(n)** — más rápido que cualquier algoritmo basado en comparaciones, que tiene un límite teórico de O(n log n). **Espacio:** O(n+k) por el arreglo de salida y el conteo.
 
 **Cuándo se usa en la práctica:** cuando se ordenan enteros (o cadenas de longitud fija) y se puede garantizar que el número de dígitos es pequeño frente a `n` — por ejemplo, ordenar millones de números telefónicos o IDs.
+
+### Visualización paso a paso en texto
+
+Radix no compara elementos, así que marcar `^^` no aplica aquí. Lo que ayuda a visualizar es **en qué cubeta cae cada número**, porque eso es lo único que decide el orden de cada pasada:
+
+```python
+def mostrar_cubetas(cubetas, etiqueta=""):
+    print(etiqueta)
+    for d in range(10):
+        if cubetas[d]:
+            print(f"  cubeta {d}: {cubetas[d]}")
+
+def counting_sort_por_digito_visual(lista, exp):
+    cubetas = [[] for _ in range(10)]
+    for num in lista:
+        digito = (num // exp) % 10
+        cubetas[digito].append(num)
+    mostrar_cubetas(cubetas, f"reparto por el dígito con exp={exp} (dígito = (num // {exp}) % 10):")
+    salida = [num for cubeta in cubetas for num in cubeta]
+    print(f"  -> se juntan las cubetas en orden 0..9: {salida}\n")
+    return salida
+
+def radix_sort_visual(lista):
+    lista = lista.copy()
+    max_val = max(lista)
+    exp = 1
+    while max_val // exp > 0:
+        print(f"== pasada con exp={exp} ==")
+        lista = counting_sort_por_digito_visual(lista, exp)
+        exp *= 10
+    return lista
+
+datos = [170, 45, 75, 90, 802, 24, 2, 66]
+print("original:", datos, "\n")
+resultado = radix_sort_visual(datos)
+print("ordenado:", resultado)
+```
+
+**Salida real:**
+
+```
+original: [170, 45, 75, 90, 802, 24, 2, 66]
+
+== pasada con exp=1 ==
+reparto por el dígito con exp=1 (dígito = (num // 1) % 10):
+  cubeta 0: [170, 90]
+  cubeta 2: [802, 2]
+  cubeta 4: [24]
+  cubeta 5: [45, 75]
+  cubeta 6: [66]
+  -> se juntan las cubetas en orden 0..9: [170, 90, 802, 2, 24, 45, 75, 66]
+
+== pasada con exp=10 ==
+reparto por el dígito con exp=10 (dígito = (num // 10) % 10):
+  cubeta 0: [802, 2]
+  cubeta 2: [24]
+  cubeta 4: [45]
+  cubeta 6: [66]
+  cubeta 7: [170, 75]
+  cubeta 9: [90]
+  -> se juntan las cubetas en orden 0..9: [802, 2, 24, 45, 66, 170, 75, 90]
+
+== pasada con exp=100 ==
+reparto por el dígito con exp=100 (dígito = (num // 100) % 10):
+  cubeta 0: [2, 24, 45, 66, 75, 90]
+  cubeta 1: [170]
+  cubeta 8: [802]
+  -> se juntan las cubetas en orden 0..9: [2, 24, 45, 66, 75, 90, 170, 802]
+
+ordenado: [2, 24, 45, 66, 75, 90, 170, 802]
+```
+
+Ver las cubetas explícitamente aclara la duda más común de los estudiantes con Radix: por qué `170` y `75` terminan en la misma cubeta (7) en la segunda pasada — porque `170 // 10 = 17` y `75 // 10 = 7`... en realidad es `(170 // 10) % 10 = 7` y `(75 // 10) % 10 = 7`: ambos tienen un 7 en la posición de las decenas, aunque tengan distinto número de dígitos en total.
 
 ---
 
