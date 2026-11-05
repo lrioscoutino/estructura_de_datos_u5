@@ -41,6 +41,81 @@ print(mezclar([3, 12, 57, 90], [21, 45, 67, 88]))
 
 Esta mezcla cuesta O(n+m) — un solo recorrido de ambas listas — porque **ya vienen ordenadas**. Esa es la propiedad clave que explota todo el ordenamiento externo: en vez de comparar todo contra todo, solo hay que "ir avanzando por el frente" de cada secuencia ordenada.
 
+### Visualización paso a paso en texto
+
+Lo que vale la pena remarcar en cada paso es cuál es el "frente" de cada lista (`a[i]` y `b[j]`) y cómo va creciendo la salida:
+
+```python
+def mezclar_visual(a, b):
+    i = j = 0
+    salida = []
+    print(f"a = {a}")
+    print(f"b = {b}\n")
+    while i < len(a) and j < len(b):
+        cumple = a[i] <= b[j]
+        print(f"frente a[{i}]={a[i]}  vs  frente b[{j}]={b[j]}  ->  ¿a[{i}] <= b[{j}]? {'Sí' if cumple else 'No'}")
+        if cumple:
+            salida.append(a[i])
+            print(f"  pasa a[{i}]={a[i]} a la salida, i avanza a {i+1}")
+            i += 1
+        else:
+            salida.append(b[j])
+            print(f"  pasa b[{j}]={b[j]} a la salida, j avanza a {j+1}")
+            j += 1
+        print(f"  salida parcial: {salida}\n")
+    if i < len(a):
+        print(f"b ya se acabó -> se copia lo que queda de a tal cual: {a[i:]}")
+        salida.extend(a[i:])
+    if j < len(b):
+        print(f"a ya se acabó -> se copia lo que queda de b tal cual: {b[j:]}")
+        salida.extend(b[j:])
+    print(f"\nsalida final: {salida}")
+    return salida
+
+mezclar_visual([3, 12, 57, 90], [21, 45, 67, 88])
+```
+
+**Salida real:**
+
+```
+a = [3, 12, 57, 90]
+b = [21, 45, 67, 88]
+
+frente a[0]=3  vs  frente b[0]=21  ->  ¿a[0] <= b[0]? Sí
+  pasa a[0]=3 a la salida, i avanza a 1
+  salida parcial: [3]
+
+frente a[1]=12  vs  frente b[0]=21  ->  ¿a[1] <= b[0]? Sí
+  pasa a[1]=12 a la salida, i avanza a 2
+  salida parcial: [3, 12]
+
+frente a[2]=57  vs  frente b[0]=21  ->  ¿a[2] <= b[0]? No
+  pasa b[0]=21 a la salida, j avanza a 1
+  salida parcial: [3, 12, 21]
+
+frente a[2]=57  vs  frente b[1]=45  ->  ¿a[2] <= b[1]? No
+  pasa b[1]=45 a la salida, j avanza a 2
+  salida parcial: [3, 12, 21, 45]
+
+frente a[2]=57  vs  frente b[2]=67  ->  ¿a[2] <= b[2]? Sí
+  pasa a[2]=57 a la salida, i avanza a 3
+  salida parcial: [3, 12, 21, 45, 57]
+
+frente a[3]=90  vs  frente b[2]=67  ->  ¿a[3] <= b[2]? No
+  pasa b[2]=67 a la salida, j avanza a 3
+  salida parcial: [3, 12, 21, 45, 57, 67]
+
+frente a[3]=90  vs  frente b[3]=88  ->  ¿a[3] <= b[3]? No
+  pasa b[3]=88 a la salida, j avanza a 4
+  salida parcial: [3, 12, 21, 45, 57, 67, 88]
+
+b ya se acabó -> se copia lo que queda de a tal cual: [90]
+
+salida final: [3, 12, 21, 45, 57, 67, 88, 90]
+```
+
+Nota el patrón: ninguno de los dos índices retrocede nunca. Cada comparación "consume" exactamente un elemento de `a` o de `b` (nunca ambos, nunca ninguno), por eso el costo total es exactamente `len(a) + len(b)` comparaciones como máximo — nunca más.
+
 ---
 
 ## 5.2.2 Mezcla directa (Balanced Merge Sort)
@@ -125,6 +200,84 @@ Con 14 elementos y bloques de 4, se crearon 4 runs iniciales. Se necesitaron **2
 
 **Costo:** cada pasada completa lee y escribe todo el archivo una vez, así que el costo total es O(n · log(n / B)), donde `B` es el tamaño del bloque que cabe en memoria — mientras más grande sea `B` (más RAM disponible), menos pasadas hacen falta.
 
+### Visualización paso a paso en texto
+
+El código anterior ya imprime cada mezcla, pero dibujar las runs como cajas lado a lado hace mucho más clara la idea de "ir reduciendo el número de runs a la mitad en cada pasada":
+
+```python
+def mapa_pasada(pares, etiqueta):
+    print(etiqueta)
+    for izq, der, resultado in pares:
+        cajas_izq = "[" + " ".join(str(v) for v in izq) + "]"
+        if der is not None:
+            cajas_der = "[" + " ".join(str(v) for v in der) + "]"
+            print(f"  {cajas_izq} + {cajas_der}  ->  [{' '.join(str(v) for v in resultado)}]")
+        else:
+            print(f"  {cajas_izq}  (sin pareja, pasa directo)  ->  [{' '.join(str(v) for v in resultado)}]")
+    print()
+
+def mezclar(a, b):
+    i = j = 0
+    salida = []
+    while i < len(a) and j < len(b):
+        if a[i] <= b[j]:
+            salida.append(a[i]); i += 1
+        else:
+            salida.append(b[j]); j += 1
+    salida.extend(a[i:]); salida.extend(b[j:])
+    return salida
+
+def crear_runs(datos, tam_bloque):
+    return [sorted(datos[i:i+tam_bloque]) for i in range(0, len(datos), tam_bloque)]
+
+datos = [57, 12, 90, 3, 45, 88, 21, 67, 5, 99, 34, 72, 8, 61]
+TAM_BLOQUE = 4
+runs = crear_runs(datos, TAM_BLOQUE)
+print("runs iniciales (bloques de tamaño fijo, cada uno ordenado por separado):")
+for r in runs:
+    print(" ", r)
+print()
+
+paso = 0
+while len(runs) > 1:
+    paso += 1
+    nuevas = []
+    pares = []
+    for i in range(0, len(runs), 2):
+        if i + 1 < len(runs):
+            resultado = mezclar(runs[i], runs[i+1])
+            pares.append((runs[i], runs[i+1], resultado))
+            nuevas.append(resultado)
+        else:
+            pares.append((runs[i], None, runs[i]))
+            nuevas.append(runs[i])
+    mapa_pasada(pares, f"pasada {paso}:")
+    runs = nuevas
+
+print("resultado final:", runs[0])
+```
+
+**Salida real:**
+
+```
+runs iniciales (bloques de tamaño fijo, cada uno ordenado por separado):
+  [3, 12, 57, 90]
+  [21, 45, 67, 88]
+  [5, 34, 72, 99]
+  [8, 61]
+
+pasada 1:
+  [3 12 57 90] + [21 45 67 88]  ->  [3 12 21 45 57 67 88 90]
+  [5 34 72 99] + [8 61]  ->  [5 8 34 61 72 99]
+
+pasada 2:
+  [3 12 21 45 57 67 88 90] + [5 8 34 61 72 99]  ->  [3 5 8 12 21 34 45 57 61 67 72 88 90 99]
+
+resultado final: [3, 5, 8, 12, 21, 34, 45, 57, 61, 67, 72, 88, 90, 99]
+```
+
+Visualmente queda claro por qué siempre se necesitan `⌈log₂ r⌉` pasadas: 4 runs se convierten en 2, y esas 2 se convierten en 1 — cada pasada divide a la mitad cuántas cajas quedan por mezclar, igual que una eliminación por torneo.
+
 ---
 
 ## 5.2.3 Mezcla natural (Natural Merge Sort)
@@ -198,6 +351,75 @@ resultado final: [1, 2, 3, 12, 45, 57, 67, 88, 90, 99]
 Con estos mismos 10 datos, la mezcla natural encontró **3 runs** en lugar de las 3 runs de tamaño fijo que habría forzado la mezcla directa con bloques de tamaño 4 (que hubiera partido el archivo en `[3,12,57,90]`, `[2,45,88,1]`, `[67,99]` sin aprovechar que `2,45,88` ya venía ordenado por sí solo, pero cortando `1` después de `88` aunque rompiera esa racha). Cuando los datos de entrada ya tienen tramos ordenados "naturalmente" (algo común en datos del mundo real, como transacciones casi en orden cronológico), la mezcla natural necesita **menos runs** y por lo tanto **menos pasadas** que la mezcla directa — el caso extremo es un archivo ya completamente ordenado, donde la mezcla natural lo detecta como una sola run y termina de inmediato, sin hacer ninguna mezcla.
 
 **Costo:** en el peor caso (datos en orden descendente total, donde cada elemento rompe la racha anterior) se comporta igual que la mezcla directa con bloques de tamaño 1. En el mejor caso (datos ya ordenados) termina en una sola pasada de detección, sin mezclas — ahí es donde la mezcla natural le gana claramente a la directa.
+
+### Visualización paso a paso en texto
+
+Lo que vale la pena ver en detalle aquí es la **detección de runs**: en qué momento exacto se rompe una racha ascendente y arranca un run nuevo.
+
+```python
+def detectar_runs_naturales_visual(datos):
+    runs = []
+    actual = [datos[0]]
+    print(f"dato[0]={datos[0]} -> empieza el run actual: {actual}")
+    for i in range(1, len(datos)):
+        sube = datos[i] >= datos[i-1]
+        print(f"dato[{i}]={datos[i]} vs dato[{i-1}]={datos[i-1]}: ¿{datos[i]} >= {datos[i-1]}? {'Sí' if sube else 'No'}")
+        if sube:
+            actual.append(datos[i])
+            print(f"  sigue la racha -> run actual: {actual}")
+        else:
+            runs.append(actual)
+            print(f"  se rompió la racha -> se cierra el run {actual}, empieza uno nuevo")
+            actual = [datos[i]]
+            print(f"  nuevo run actual: {actual}")
+    runs.append(actual)
+    print(f"\nfin del recorrido -> se cierra el último run: {actual}")
+    return runs
+
+datos = [3, 12, 57, 90, 2, 45, 88, 1, 67, 99]
+print("datos:", datos, "\n")
+runs = detectar_runs_naturales_visual(datos)
+print("\nruns naturales detectadas:")
+for r in runs:
+    print(" ", r)
+```
+
+**Salida real:**
+
+```
+datos: [3, 12, 57, 90, 2, 45, 88, 1, 67, 99]
+
+dato[0]=3 -> empieza el run actual: [3]
+dato[1]=12 vs dato[0]=3: ¿12 >= 3? Sí
+  sigue la racha -> run actual: [3, 12]
+dato[2]=57 vs dato[1]=12: ¿57 >= 12? Sí
+  sigue la racha -> run actual: [3, 12, 57]
+dato[3]=90 vs dato[2]=57: ¿90 >= 57? Sí
+  sigue la racha -> run actual: [3, 12, 57, 90]
+dato[4]=2 vs dato[3]=90: ¿2 >= 90? No
+  se rompió la racha -> se cierra el run [3, 12, 57, 90], empieza uno nuevo
+  nuevo run actual: [2]
+dato[5]=45 vs dato[4]=2: ¿45 >= 2? Sí
+  sigue la racha -> run actual: [2, 45]
+dato[6]=88 vs dato[5]=45: ¿88 >= 45? Sí
+  sigue la racha -> run actual: [2, 45, 88]
+dato[7]=1 vs dato[6]=88: ¿1 >= 88? No
+  se rompió la racha -> se cierra el run [2, 45, 88], empieza uno nuevo
+  nuevo run actual: [1]
+dato[8]=67 vs dato[7]=1: ¿67 >= 1? Sí
+  sigue la racha -> run actual: [1, 67]
+dato[9]=99 vs dato[8]=67: ¿99 >= 67? Sí
+  sigue la racha -> run actual: [1, 67, 99]
+
+fin del recorrido -> se cierra el último run: [1, 67, 99]
+
+runs naturales detectadas:
+  [3, 12, 57, 90]
+  [2, 45, 88]
+  [1, 67, 99]
+```
+
+Esta traza aclara la pregunta que casi siempre surge en clase: ¿por qué el `1` no se junta con `[2, 45, 88]`? Porque aunque `1 < 88` no importa — lo único que decide la racha es la comparación con el dato **inmediatamente anterior** (`88`), y `1 >= 88` es falso, así que ahí se corta, sin mirar nada más atrás del run.
 
 ---
 
